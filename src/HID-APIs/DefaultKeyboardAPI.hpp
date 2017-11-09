@@ -46,25 +46,27 @@ size_t DefaultKeyboardAPI::set(KeyboardKeycode k, bool s)
 		// Add k to the key report only if it's not already present
 		// and if there is an empty slot. Remove the first available key.
 		uint8_t emptySlot = numKeycodeSlots;
-		uint8_t foundSlot = numKeycodeSlots;
 		for (uint8_t i = numKeycodeSlots; i > 0; --i)
 		{
 			auto key = _keyReport.keycodes[i-1];
 			if (key == KEY_RESERVED) {
-				emptySlot = i;
+				emptySlot = i-1;
 			}
 			else if (key == k) {
-				foundSlot = i;
-			}
+                if (!s) {
+                    _keyReport.keycodes[i - 1] = KEY_RESERVED;
+                }
+                return 1;
+            }
 		}
 
-		if (s && foundSlot == numKeycodeSlots && emptySlot < numKeycodeSlots) {
+		if (s && emptySlot < numKeycodeSlots) {
 			_keyReport.keycodes[emptySlot] = k;
+            return 1;
 		}
-		else if (!s && foundSlot < numKeycodeSlots) {
-			_keyReport.keycodes[foundSlot] = KEY_RESERVED;
-		}
-		return foundSlot < numKeycodeSlots || (s && emptySlot < numKeycodeSlots);
+        else {
+            return 0;
+        }
 	}
 }
 
