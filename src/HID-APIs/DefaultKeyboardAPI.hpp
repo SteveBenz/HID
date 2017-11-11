@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 size_t DefaultKeyboardAPI::set(KeyboardKeycode k, bool s) 
 {
-	const auto keycodesEnd = &_keyReport.keycodes[sizeof(_keyReport.keycodes) / sizeof(_keyReport.keycodes[0])];
+	const uint8_t keycodesEnd = sizeof(_keyReport.keycodes) / sizeof(_keyReport.keycodes[0]);
 	size_t numKeysFound = 0;
 	// It's a modifier key
 	if (k >= KEY_LEFT_CTRL && k <= KEY_RIGHT_GUI)
@@ -44,23 +44,23 @@ size_t DefaultKeyboardAPI::set(KeyboardKeycode k, bool s)
 	// It's a normal key being pressed
 	else {
 		// Find the occurrence of k in .keycodes or the first empty slot
-		auto p = _keyReport.keycodes;
-		while (p < keycodesEnd && *p != k && *p != KEY_RESERVED) {
+		uint8_t p = 0;
+		while (p < keycodesEnd && _keyReport.keycodes[p] != k && _keyReport.keycodes[p] != KEY_RESERVED) {
 			++p;
 		}
 
 		// if we're pressing the key and we either found it already pressed or found an empty slot
 		if (s && p < keycodesEnd) {
-			*p = k;
+            _keyReport.keycodes[p] = k;
 			numKeysFound = 1;
 		}
 		// else if we're releasing and we found the key
-		else if (!s && p < keycodesEnd && *p == k) {
+		else if (!s && p < keycodesEnd && _keyReport.keycodes[p] == k) {
 			// Shift the remainder of the array (if any) up a slot, stepping on indexOfK.
-			for (;p + 1 < keycodesEnd && *p != KEY_RESERVED; ++p) {
-				*p = p[1];
+			for (;p + 1 < keycodesEnd && _keyReport.keycodes[p] != KEY_RESERVED; ++p) {
+                _keyReport.keycodes[p] = _keyReport.keycodes[p+1];
 			}
-			*p = KEY_RESERVED;
+            _keyReport.keycodes[p] = KEY_RESERVED;
 			numKeysFound = 1;
 		}
 		else {
